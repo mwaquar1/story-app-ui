@@ -5,24 +5,31 @@ function App() {
     const [characters, setCharacters] = useState(2);
     const [paragraphs, setParagraphs] = useState(3);
     const [extraPrompt, setExtraPrompt] = useState("");
-    const [story, setStory] = useState("");
+    const [generateImages, setGenerateImages] = useState(false);
+    const [storyData, setStoryData] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async () => {
+    const handleGenerate = async () => {
         setLoading(true);
-        setStory("");
+        setStoryData(null);
 
         try {
-            const res = await fetch("http://127.0.0.1:8000/generate", {
+            const res = await fetch("http://localhost:8000/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ genre, characters, paragraphs, extraPrompt }),
+                body: JSON.stringify({
+                    genre,
+                    characters,
+                    paragraphs,
+                    extraPrompt,
+                    generateImages
+                }),
             });
 
             const data = await res.json();
-            setStory(data.story);
+            setStoryData(data);
         } catch (err) {
-            setStory("⚠️ Error generating story.");
+            setStoryData({ story: "⚠️ Error generating story.", images: [] });
         } finally {
             setLoading(false);
         }
@@ -79,7 +86,7 @@ function App() {
                     />
                 </div>
 
-                {/* ✅ Additional Prompt Box */}
+                {/* Additional Prompt */}
                 <div>
                     <label className="block mb-1 font-medium">Additional Prompt</label>
                     <textarea
@@ -87,12 +94,24 @@ function App() {
                         onChange={(e) => setExtraPrompt(e.target.value)}
                         className="w-full p-2 border rounded h-24"
                         placeholder="E.g., make it funny, set it in the future..."
-                    ></textarea>
+                    />
                 </div>
 
-                {/* Submit Button */}
+                {/* ✅ Generate Images Checkbox */}
+                <div className="flex items-center space-x-2">
+                    <input
+                        type="checkbox"
+                        checked={generateImages}
+                        onChange={(e) => setGenerateImages(e.target.checked)}
+                        id="generateImages"
+                        className="w-4 h-4"
+                    />
+                    <label htmlFor="generateImages" className="font-medium">Generate Images</label>
+                </div>
+
+                {/* Generate Button */}
                 <button
-                    onClick={handleSubmit}
+                    onClick={handleGenerate}
                     className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
                 >
                     Generate Story
@@ -102,12 +121,22 @@ function App() {
             {/* Right Pane */}
             <div className="w-2/3 p-6 overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4">Generated Story</h2>
-                <div className="bg-white shadow-md rounded p-4 min-h-[70vh]">
-                    {loading ? (
-                        <p className="text-gray-500 animate-pulse">✨ Generating your story...</p>
-                    ) : (
-                        <p className="whitespace-pre-line">{story}</p>
-                    )}
+                <div className="bg-white shadow-md rounded p-4 min-h-[70vh] flex flex-col space-y-8">
+                    {loading && <p className="text-gray-500 animate-pulse">✨ Generating story...</p>}
+
+                    {storyData &&
+                        storyData.story.split("\n\n").map((para, idx) => (
+                            <div key={idx} className="flex flex-col md:flex-row gap-4 items-start">
+                                <p className="flex-1 text-gray-800">{para}</p>
+                                {generateImages && storyData.images && storyData.images[idx] && (
+                                    <img
+                                        src={storyData.images[idx]}
+                                        alt={`Paragraph ${idx + 1}`}
+                                        className="w-full md:w-1/3 rounded shadow-md"
+                                    />
+                                )}
+                            </div>
+                        ))}
                 </div>
             </div>
         </div>
