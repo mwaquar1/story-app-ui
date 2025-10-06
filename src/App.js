@@ -4,7 +4,7 @@ function App() {
     const [genre, setGenre] = useState("fantasy");
     const [characters, setCharacters] = useState(2);
     const [paragraphs, setParagraphs] = useState(3);
-    const [extraPrompt, setExtraPrompt] = useState("");   // ✅ NEW
+    const [extraPrompt, setExtraPrompt] = useState("");
     const [story, setStory] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -16,7 +16,7 @@ function App() {
             const res = await fetch("http://127.0.0.1:8000/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ genre, characters, paragraphs, extraPrompt }), // ✅ NEW
+                body: JSON.stringify({ genre, characters, paragraphs, extraPrompt }),
             });
 
             const data = await res.json();
