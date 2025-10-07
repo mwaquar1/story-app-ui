@@ -1,4 +1,23 @@
-import { useState } from "react";
+import {useState} from "react";
+
+const models = [
+    {
+        name: "OpenAI GPT",
+        value: "gpt",
+        img: "/images/openai.svg"
+    },
+    {
+        name: "Google Gemma",
+        value: "gemma",
+        img: "/images/google.svg"
+    },
+    {
+        name: "Meta Llama",
+        value: "llama",
+        img: "/images/meta.svg"
+    }
+];
+
 
 function App() {
     const [genre, setGenre] = useState("fantasy");
@@ -8,6 +27,7 @@ function App() {
     const [generateImages, setGenerateImages] = useState(false);
     const [storyData, setStoryData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [model, setModel] = useState(models[0].value);
 
     const handleGenerate = async () => {
         setLoading(true);
@@ -16,30 +36,59 @@ function App() {
         try {
             const res = await fetch("http://localhost:8000/generate", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
                     genre,
                     characters,
                     paragraphs,
                     extraPrompt,
-                    generateImages
+                    generateImages,
+                    model,
                 }),
             });
 
             const data = await res.json();
             setStoryData(data);
         } catch (err) {
-            setStoryData({ story: "⚠️ Error generating story.", images: [] });
+            setStoryData({story: "Error generating story.", images: []});
         } finally {
             setLoading(false);
         }
     };
 
+    const selectedModel = models.find((m) => m.value === model);
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Left Pane */}
             <div className="w-1/3 bg-white p-6 shadow-md flex flex-col space-y-6">
                 <h1 className="text-2xl font-bold mb-4">AI Story Generator</h1>
+
+                {/* Model Selection */}
+                <div>
+                    <label className="block mb-2 font-medium">Story Generation Model</label>
+                    <div className="flex space-x-4">
+                        {models.map((m) => (
+                            <label
+                                key={m.value}
+                                className={`flex items-center space-x-2 cursor-pointer border rounded p-2 ${
+                                    model === m.value ? "border-blue-600 bg-blue-50" : "border-gray-200"
+                                }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="model"
+                                    value={m.value}
+                                    checked={model === m.value}
+                                    onChange={() => setModel(m.value)}
+                                    className="hidden"
+                                />
+                                <img src={m.img} alt={m.name} className="w-8 h-8 rounded"/>
+                                <span className={model === m.value ? "font-bold text-blue-700" : ""}>{m.name}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
 
                 {/* Genre Dropdown */}
                 <div>
@@ -97,7 +146,7 @@ function App() {
                     />
                 </div>
 
-                {/* ✅ Generate Images Checkbox */}
+                {/* Generate Images Checkbox */}
                 <div className="flex items-center space-x-2">
                     <input
                         type="checkbox"
@@ -122,7 +171,8 @@ function App() {
             <div className="w-2/3 p-6 overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4">Generated Story</h2>
                 <div className="bg-white shadow-md rounded p-4 min-h-[70vh] flex flex-col space-y-8">
-                    {loading && <p className="text-gray-500 animate-pulse">✨ Generating story...</p>}
+                    {loading &&
+                        <p className="text-gray-500 animate-pulse">✨ Generating story with {selectedModel?.name}...</p>}
 
                     {storyData &&
                         storyData.story.split("\n\n").map((para, idx) => (
